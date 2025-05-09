@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useSupabase } from "@/utils/supabase/context";
 
 import dynamic from "next/dynamic";
+import { useQuery } from "@tanstack/react-query";
 
 const LocationAutocomplete = dynamic(
   () => import("@/components/LocationAutocomplete"),
@@ -38,6 +39,7 @@ export default function AddEventPage() {
     participantLimit: string;
     ticketPrice: string;
     coordinates: [number, number] | null;
+    tag: string;
   }>({
     title: "",
     description: "",
@@ -46,8 +48,22 @@ export default function AddEventPage() {
     participantLimit: "",
     ticketPrice: "",
     coordinates: null,
+    tag: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: tags } = useQuery({
+    queryKey: ["tags"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("Tags").select("*");
+      console.log("Tags data:", data);
+      if (error) {
+        console.error("Error fetching tags:", error);
+        return [];
+      }
+      return data;
+    },
+  });
 
   useEffect(() => {
     console.log(formData.coordinates);
@@ -85,9 +101,9 @@ export default function AddEventPage() {
           description: formData.description,
           location: formData.location,
           dateTime: new Date(formData.dateTime).toISOString(),
-
           latitude: formData.coordinates?.[0],
           longitude: formData.coordinates?.[1],
+          tag: formData.tag,
         },
       ]);
 
@@ -176,6 +192,24 @@ export default function AddEventPage() {
                 onChange={handleChange}
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tag">Tag</Label>
+              <select
+                id="tag"
+                name="tag"
+                value={formData.tag}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select a tag</option>
+                {tags?.map((tag) => (
+                  <option key={tag.id} value={tag.name}>
+                    {tag.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

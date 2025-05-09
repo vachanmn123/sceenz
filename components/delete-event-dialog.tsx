@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,46 +10,62 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+} from "@/components/ui/dialog";
+import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSupabase } from "@/utils/supabase/context";
 
 interface DeleteEventDialogProps {
-  eventId: string
-  eventTitle: string
-  variant?: "icon" | "button" | "menu-item"
-  onDeleted?: () => void
+  eventId: string;
+  eventTitle: string;
+  variant?: "icon" | "button" | "menu-item";
+  onDeleted?: () => void;
 }
 
-export function DeleteEventDialog({ eventId, eventTitle, variant = "button", onDeleted }: DeleteEventDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const router = useRouter()
+export function DeleteEventDialog({
+  eventId,
+  eventTitle,
+  variant = "button",
+  onDeleted,
+}: DeleteEventDialogProps) {
+  const { supabase } = useSupabase();
+  const [open, setOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   const handleDelete = async () => {
-    setIsDeleting(true)
-
     try {
-      // In a real app, you would call your API to delete the event
-      console.log(`Deleting event ${eventId}`)
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        return;
+      }
+      setIsDeleting(true);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { error } = await supabase
+        .from("Events")
+        .delete()
+        .eq("id", eventId)
+        .eq("hostId", user.user.id);
 
-      setOpen(false)
+      if (error) {
+        console.error("Error deleting event:", error);
+        return;
+      }
+
+      setOpen(false);
 
       if (onDeleted) {
-        onDeleted()
+        onDeleted();
       } else {
         // Navigate back to events list
-        router.push("/dashboard/events")
+        router.push("/dashboard/events");
       }
     } catch (error) {
-      console.error("Error deleting event:", error)
+      console.error("Error deleting event:", error);
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   const renderTrigger = () => {
     switch (variant) {
@@ -58,23 +74,23 @@ export function DeleteEventDialog({ eventId, eventTitle, variant = "button", onD
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Trash2 className="h-4 w-4" />
           </Button>
-        )
+        );
       case "menu-item":
         return (
           <div className="flex items-center text-destructive">
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </div>
-        )
+        );
       default:
         return (
           <Button variant="destructive" className="flex items-center gap-1">
             <Trash2 className="h-4 w-4" />
             Delete
           </Button>
-        )
+        );
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -83,18 +99,27 @@ export function DeleteEventDialog({ eventId, eventTitle, variant = "button", onD
         <DialogHeader>
           <DialogTitle>Delete Event</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete &quot;{eventTitle}&quot;? This action cannot be undone.
+            Are you sure you want to delete &quot;{eventTitle}&quot;? This
+            action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={isDeleting}>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={isDeleting}
+          >
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
             {isDeleting ? "Deleting..." : "Delete Event"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

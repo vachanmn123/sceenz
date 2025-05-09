@@ -23,16 +23,16 @@ export default function EventsPage() {
         return [];
       }
       const { data, error } = await supabase
-        .from("events")
+        .from("Events")
         .select("*")
-        .filter("Events.hostId", "eq", user.user?.id)
+        .filter("hostId", "eq", user.user?.id)
         .order("created_at", { ascending: false });
+      console.log({ data, error });
       if (error) {
         throw new Error(error.message);
       }
       return data;
     },
-    refetchOnWindowFocus: false,
   });
 
   const searchParams = useSearchParams();

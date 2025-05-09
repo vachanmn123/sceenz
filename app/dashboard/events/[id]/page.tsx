@@ -1,34 +1,67 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Calendar, Edit, MapPin, Share2, Users } from "lucide-react"
-import Link from "next/link"
-import { QRCode } from "@/components/qr-code"
-import { ShareEvent } from "@/components/share-event"
-import { EventStats } from "@/components/event-stats"
-import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
-import { DeleteEventDialog } from "@/components/delete-event-dialog"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Calendar, Edit, MapPin, Share2, Users } from "lucide-react";
+import Link from "next/link";
+import { QRCode } from "@/components/qr-code";
+import { ShareEvent } from "@/components/share-event";
+import { EventStats } from "@/components/event-stats";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { DeleteEventDialog } from "@/components/delete-event-dialog";
+import { useQuery } from "@tanstack/react-query";
+import { useSupabase } from "@/utils/supabase/context";
+import { use } from "react";
 
-export default function EventDetailsPage({ params }: { params: { id: string } }) {
-  // Mock data for UI demonstration
-  const event = {
-    id: params.id,
-    title: "Tech Conference 2024",
-    description:
-      "Annual technology conference with industry leaders. Join us for a day of inspiring talks, workshops, and networking opportunities. Learn about the latest trends in technology and connect with professionals in your field.",
-    location: "San Francisco Convention Center, 747 Howard St, San Francisco, CA 94103",
-    datetime: "2024-08-15T09:00:00",
-    participant_limit: 500,
-    ticket_price: 99.99,
-    participants: 245,
-    created_at: "2024-01-15T12:00:00",
+export default function EventDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const { supabase } = useSupabase();
+  const {
+    data: event,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["events", id],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        return [];
+      }
+      const { data, error } = await supabase
+        .from("Events")
+        .select("*")
+        .filter("id", "eq", id)
+        .filter("hostId", "eq", user.user?.id)
+        .single();
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+
+  const eventUrl = `https://eventmanager.app/events/${id}`;
+  const eventDate = new Date(event?.dateTime);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  const eventUrl = `https://eventmanager.app/events/${event.id}`
-  const eventDate = new Date(event.datetime)
+  if (error) {
+    return <div>Error loading event: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -96,7 +129,11 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <h3 className="font-semibold">Ticket Price</h3>
-                  <p>{event.ticket_price ? `$${event.ticket_price.toFixed(2)}` : "Free"}</p>
+                  <p>
+                    {event.ticket_price
+                      ? `$${event.ticketPrice.toFixed(2)}`
+                      : "Free"}
+                  </p>
                 </div>
 
                 <div>
@@ -104,14 +141,17 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     <span>
-                      {event.participants} / {event.participant_limit}
+                      {event.participants} / {event.participantLimit ?? "∞"}
                     </span>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="font-semibold">Status</h3>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 text-green-700 hover:bg-green-50"
+                  >
                     Active
                   </Badge>
                 </div>
@@ -125,7 +165,9 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
             <Card>
               <CardHeader>
                 <CardTitle>QR Code</CardTitle>
-                <CardDescription>Scan this QR code to access the event</CardDescription>
+                <CardDescription>
+                  Scan this QR code to access the event
+                </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center">
                 <QRCode value={eventUrl} />
@@ -149,5 +191,5 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

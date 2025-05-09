@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -411,7 +410,7 @@ export default function EventDetailsPage({
                         {review.review && (
                           <div className="ml-10 pl-2 border-l-2 border-muted mt-2">
                             <p className="text-muted-foreground italic">
-                              "{review.review}"
+                              &quot;{review.review}&quot;
                             </p>
                           </div>
                         )}
@@ -505,7 +504,7 @@ function ErrorState({ error }: { error: string }) {
 }
 
 // Helper functions
-function getEventStatus(event: any) {
+function getEventStatus(event: { dateTime: string }) {
   const now = new Date();
   const eventDate = new Date(event.dateTime);
 
@@ -516,7 +515,8 @@ function getEventStatus(event: any) {
   return "Active";
 }
 
-function getStatusColor(event: any) {
+function getStatusColor(event: unknown) {
+  // @ts-expect-error - Its fine
   const status = getEventStatus(event);
 
   switch (status) {

@@ -108,7 +108,7 @@ export default function LocationAutocomplete({
       id: item.place_id.toString(),
       address: item.display_name,
       displayName: item.display_name,
-      coordinates: [Number.parseFloat(item.lon), Number.parseFloat(item.lat)],
+      coordinates: [Number.parseFloat(item.lat), Number.parseFloat(item.lon)],
       addressDetails: item.address || {},
     });
   };

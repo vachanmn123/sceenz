@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -49,6 +49,10 @@ export default function AddEventPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    console.log(formData.coordinates);
+  }, [formData]);
+
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
@@ -74,11 +78,16 @@ export default function AddEventPage() {
 
       const { error } = await supabase.from("Events").insert([
         {
-          ...formData,
           hostId: user.id,
           participantLimit: parseInt(formData.participantLimit) || null,
           ticketPrice: parseFloat(formData.ticketPrice) || null,
-          coordinates: formData.coordinates?.join(","),
+          title: formData.title,
+          description: formData.description,
+          location: formData.location,
+          dateTime: new Date(formData.dateTime).toISOString(),
+
+          latitude: formData.coordinates?.[0],
+          longitude: formData.coordinates?.[1],
         },
       ]);
 

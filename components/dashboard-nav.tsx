@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar, LayoutDashboard, Settings, Users } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar, LayoutDashboard } from "lucide-react";
 
 export function DashboardNav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const routes = [
     {
@@ -22,19 +22,7 @@ export function DashboardNav() {
       icon: <Calendar className="h-4 w-4 mr-2" />,
       exact: false,
     },
-    {
-      href: "/dashboard/attendees",
-      label: "Attendees",
-      icon: <Users className="h-4 w-4 mr-2" />,
-      exact: false,
-    },
-    {
-      href: "/dashboard/settings",
-      label: "Settings",
-      icon: <Settings className="h-4 w-4 mr-2" />,
-      exact: false,
-    },
-  ]
+  ];
 
   return (
     <nav className="hidden w-56 flex-col border-r bg-background p-4 md:flex">
@@ -45,7 +33,9 @@ export function DashboardNav() {
               variant="ghost"
               className={cn(
                 "w-full justify-start",
-                (route.exact ? pathname === route.href : pathname.startsWith(route.href)) && "bg-muted font-medium",
+                (route.exact
+                  ? pathname === route.href
+                  : pathname.startsWith(route.href)) && "bg-muted font-medium"
               )}
             >
               {route.icon}
@@ -55,5 +45,5 @@ export function DashboardNav() {
         ))}
       </div>
     </nav>
-  )
+  );
 }

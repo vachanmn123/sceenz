@@ -18,18 +18,12 @@ export default function Login() {
   const [error, setError] = useState<null | string>(null);
 
   const handleGoogleLogin = async () => {
-    const { error, data } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-    if (error) {
-      console.error("Error logging in with Google:", error);
-      setError("Failed to log in with Google. Please try again.");
-      return;
-    }
-    if (data) {
-      console.log("Google login data:", data);
-      redirect("/dashboard");
-    }
   };
 
   return (

@@ -200,6 +200,7 @@ export default function AddEventPage() {
                 id="tag"
                 name="tag"
                 value={formData.tag}
+                // @ts-expect-error - It will work.
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
               >

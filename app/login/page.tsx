@@ -1,7 +1,6 @@
 "use client";
 
 import { useSupabase } from "@/utils/supabase/context";
-import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,11 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
 
 export default function Login() {
   const { supabase } = useSupabase();
-  const [error, setError] = useState<null | string>(null);
 
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
@@ -29,7 +26,6 @@ export default function Login() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
       <Card className="w-full max-w-md">
-        {error && <div className="mb-4 text-red-500">{error}</div>}
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
             Welcome back

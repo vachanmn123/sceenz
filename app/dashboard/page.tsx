@@ -26,15 +26,30 @@ export default async function DashboardPage() {
     .filter("dateTime", "gte", new Date().toISOString())
     .order("dateTime", { ascending: true });
 
+  const { count: totalEvents } = await supabase
+    .from("Events")
+    .select("id", { count: "exact", head: true })
+    .filter("hostId", "eq", user.user.id);
+
+  console.log("totalEvents", totalEvents);
+
+  const { count: totalParticipants } = await supabase
+    .from("Tickets")
+    .select("*", { count: "exact", head: true })
+    .filter("eventId", "in", `(${events?.map((e) => e.id).join(",")})`);
+
   if (error) {
     console.error("Error fetching events:", error);
     return <div>Error loading events</div>;
   }
+
   const stats = [
-    { title: "Total Events", value: "12" },
-    { title: "Total Participants", value: "1,234" },
-    { title: "Upcoming Events", value: "5" },
-    { title: "Revenue", value: "$12,345" },
+    { title: "Total Events", value: totalEvents ?? 0 },
+    {
+      title: "Total Participants in upcoming events",
+      value: totalParticipants ?? 0,
+    },
+    { title: "Upcoming Events", value: events.length ?? 0 },
   ];
 
   return (
@@ -51,7 +66,11 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
-          <StatsCard key={index} title={stat.title} value={stat.value} />
+          <StatsCard
+            key={index}
+            title={stat.title}
+            value={stat.value.toString()}
+          />
         ))}
       </div>
 

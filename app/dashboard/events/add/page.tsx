@@ -20,16 +20,32 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useSupabase } from "@/utils/supabase/context";
 
+import dynamic from "next/dynamic";
+
+const LocationAutocomplete = dynamic(
+  () => import("@/components/LocationAutocomplete"),
+  { ssr: false }
+);
+
 export default function AddEventPage() {
   const { supabase } = useSupabase();
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    location: string;
+    dateTime: string;
+    participantLimit: string;
+    ticketPrice: string;
+    coordinates: [number, number] | null;
+  }>({
     title: "",
     description: "",
     location: "",
     dateTime: "",
     participantLimit: "",
     ticketPrice: "",
+    coordinates: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,6 +78,7 @@ export default function AddEventPage() {
           hostId: user.id,
           participantLimit: parseInt(formData.participantLimit) || null,
           ticketPrice: parseFloat(formData.ticketPrice) || null,
+          coordinates: formData.coordinates?.join(","),
         },
       ]);
 
@@ -129,13 +146,14 @@ export default function AddEventPage() {
 
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                placeholder="Event location"
-                value={formData.location}
-                onChange={handleChange}
-                required
+              <LocationAutocomplete
+                onSelect={({ address, coordinates }) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    location: address,
+                    coordinates: coordinates,
+                  }));
+                }}
               />
             </div>
 

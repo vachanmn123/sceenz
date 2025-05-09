@@ -9,11 +9,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, Edit, MapPin, Share2, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Edit,
+  Loader2,
+  MapPin,
+  Share2,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { QRCode } from "@/components/qr-code";
 import { ShareEvent } from "@/components/share-event";
-import { EventStats } from "@/components/event-stats";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { DeleteEventDialog } from "@/components/delete-event-dialog";
@@ -52,7 +59,22 @@ export default function EventDetailsPage({
     },
   });
 
-  const eventUrl = `https://eventmanager.app/events/${id}`;
+  const { data: participants, isLoading: loadingParticipants } = useQuery({
+    queryKey: ["participants", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("Tickets")
+        .select("id, name, email")
+        .filter("event", "eq", id);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+
+  const eventUrl = `${window.location.origin}/events/${event?.id}`;
   const eventDate = new Date(event?.dateTime);
 
   if (isLoading) {
@@ -93,7 +115,7 @@ export default function EventDetailsPage({
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="share">Share</TabsTrigger>
-          <TabsTrigger value="stats">Stats</TabsTrigger>
+          <TabsTrigger value="participants">Participants</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
@@ -186,8 +208,88 @@ export default function EventDetailsPage({
           </div>
         </TabsContent>
 
-        <TabsContent value="stats" className="space-y-4">
-          <EventStats eventId={event.id} />
+        <TabsContent value="participants" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Participants</CardTitle>
+                <CardDescription>
+                  View and manage participants for this event
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!participants?.length) return;
+                    const csvData = participants.map((participant) => ({
+                      Name: participant.name,
+                      Email: participant.email,
+                    }));
+                    const csvContent =
+                      "data:text/csv;charset=utf-8," +
+                      "Name,Email\n" +
+                      csvData
+                        .map((row) => Object.values(row).join(","))
+                        .join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "participants.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                >
+                  Export CSV
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingParticipants ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+                </div>
+              ) : participants?.length ? (
+                <div className="rounded-md border">
+                  <div className="grid grid-cols-12 gap-2 p-4 font-medium border-b bg-muted/50">
+                    <div className="col-span-1">#</div>
+                    <div className="col-span-5">Name</div>
+                    <div className="col-span-5">Email</div>
+                  </div>
+                  <div className="divide-y">
+                    {participants?.map((participant, index) => (
+                      <div
+                        key={participant.id}
+                        className="grid grid-cols-12 gap-2 p-4 items-center hover:bg-muted/50"
+                      >
+                        <div className="col-span-1 text-muted-foreground">
+                          {index + 1}
+                        </div>
+                        <div className="col-span-5 font-medium">
+                          {participant.name}
+                        </div>
+                        <div className="col-span-5 text-muted-foreground">
+                          {participant.email}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 border rounded-md bg-muted/10">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">
+                    No participants have registered yet.
+                  </p>
+                  <Button variant="outline" className="mt-4">
+                    Share Event
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

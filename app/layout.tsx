@@ -27,6 +27,9 @@ export default function RootLayout({
   return (
     <SupabaseProvider>
       <html lang="en">
+        <head>
+          <meta name="apple-mobile-web-app-title" content="Sceenz" />
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >

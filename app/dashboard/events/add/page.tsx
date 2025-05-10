@@ -188,6 +188,7 @@ export default function AddEventPage() {
                 id="datetime"
                 name="dateTime"
                 type="datetime-local"
+                min={new Date().toISOString().slice(0, 16)}
                 // value={formData.dateTime}
                 onChange={handleChange}
                 required

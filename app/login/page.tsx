@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Image from "next/image";
 
 export default function Login() {
   const { supabase } = useSupabase();
@@ -26,9 +27,10 @@ export default function Login() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1 flex flex-col items-center">
+          <Image src={"/logo.png"} alt="Logo" width={100} height={100} />
           <CardTitle className="text-2xl font-bold text-center">
-            Welcome back
+            Sceenz Host Interface
           </CardTitle>
           <CardDescription className="text-center">
             Sign in to your account to continue
